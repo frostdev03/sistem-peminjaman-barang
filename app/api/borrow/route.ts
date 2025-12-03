@@ -10,8 +10,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "missing" }, { status: 400 });
     }
 
-    // return await prisma.$transaction(async (tx) => {
-    return await prisma.$transaction(async (tx: PrismaClient) => {
+    return await prisma.$transaction(async (tx) => {
+      // return await prisma.$transaction(async (tx: PrismaClient) => {
       const tool = await tx.tool.findUnique({ where: { id: Number(toolId) } });
       if (!tool)
         return NextResponse.json({ error: "not_found" }, { status: 404 });

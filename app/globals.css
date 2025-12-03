@@ -1,3 +1,5 @@
+/* src/app/globals.css */
+
 @import "tailwindcss";
 @import "tailwindcss/preflight";
 @tailwind utilities;
@@ -5,6 +7,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Warna Kustom untuk Tema */
+  --color-primary: #3b82f6; /* Blue 500 */
+  --color-primary-hover: #2563eb; /* Blue 600 */
+  --color-secondary: #6b7280; /* Gray 500 */
+  --color-secondary-hover: #4b5563; /* Gray 600 */
+  --color-success: #10b981; /* Emerald 500 */
+  --color-success-hover: #059669; /* Emerald 600 */
 }
 
 @theme inline {
@@ -25,4 +34,42 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* --- Kelas Kustom untuk Komponen --- */
+
+/* CARD */
+.card {
+  @apply bg-white p-6 rounded-xl shadow-lg mt-6;
+}
+
+/* INPUT FIELD */
+.input-field {
+  @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150;
+}
+
+/* BUTTONS */
+.btn-primary {
+  @apply bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-150;
+}
+
+.btn-success {
+  @apply bg-emerald-500 text-white rounded-lg px-4 py-2 hover:bg-emerald-600 transition duration-150;
+}
+
+/* Penyesuaian Dark Mode (Opsional, tergantung skema warna Anda) */
+@media (prefers-color-scheme: dark) {
+  .card {
+    @apply bg-zinc-900 shadow-none border border-zinc-800;
+  }
+  .input-field {
+    @apply bg-zinc-800 border-zinc-700 text-white focus:ring-blue-400 focus:border-blue-400;
+  }
+  .btn-secondary {
+    @apply bg-zinc-700 text-zinc-200 hover:bg-zinc-600;
+  }
 }
