@@ -3,7 +3,12 @@
 "use server"; // Wajib ada untuk Server Actions
 
 import { prisma } from "@/lib/prisma"; // Sesuaikan path jika prisma.ts Anda tidak di src/lib
-import { Item, BorrowFormData, ItemFormData, BorrowRecord } from "@/app/types";
+import type {
+  Item,
+  BorrowFormData,
+  ItemFormData,
+  BorrowRecord,
+} from "@/app/types";
 
 // --- FUNGSI TOOLS (MANAJEMEN & PEMINJAMAN) ---
 
@@ -21,8 +26,8 @@ export async function getTools(): Promise<Item[]> {
       stock: tool.quantity,
       borrowed: tool.borrowed,
       image: tool.imageUrl ?? "",
-      category: "Umum", // Default value karena tidak ada di DB
-      description: "Tidak ada deskripsi.", // Default value karena tidak ada di DB
+      category: tool.category || "Umum",
+      description: tool.description || "Tidak ada deskripsi.",
     }));
   } catch (error) {
     console.error("Database Error (getTools):", error);
@@ -34,7 +39,9 @@ export async function getTools(): Promise<Item[]> {
 export async function createTool(formData: ItemFormData) {
   const data = {
     name: formData.name,
-    quantity: parseInt(formData.stock),
+    category: formData.category || "Lain-lain", // include category
+    description: formData.description || "",
+    quantity: Number.parseInt(formData.stock),
     borrowed: 0,
     imageUrl: formData.image || null,
   };
@@ -55,7 +62,9 @@ export async function createTool(formData: ItemFormData) {
 export async function updateTool(id: number, formData: ItemFormData) {
   const data = {
     name: formData.name,
-    quantity: parseInt(formData.stock),
+    category: formData.category || "Lain-lain", // include category
+    description: formData.description || "",
+    quantity: Number.parseInt(formData.stock),
     imageUrl: formData.image || null,
   };
 
@@ -77,8 +86,6 @@ export async function updateTool(id: number, formData: ItemFormData) {
 // Menghapus barang
 export async function deleteTool(id: number) {
   try {
-    // Hapus histori terkait sebelum menghapus tool (jika ada relasi cascade)
-    // Untuk model Anda saat ini, kita hanya akan menghapus tool.
     return await prisma.tool.delete({
       where: { id },
     });
@@ -99,9 +106,7 @@ export async function createBorrowRecord(
   formData: BorrowFormData
 ) {
   try {
-    // Jalankan sebagai transaksi untuk memastikan update stok dan catatan history berhasil
     return await prisma.$transaction(async (tx) => {
-      // Update Tool: kurangi stok dan/atau tambah borrowed
       const tool = await tx.tool.update({
         where: { id: toolId },
         data: {
@@ -109,12 +114,10 @@ export async function createBorrowRecord(
         },
       });
 
-      // Validasi sederhana setelah update
       if (tool.quantity < tool.borrowed) {
         throw new Error("Stok tidak mencukupi untuk dipinjam.");
       }
 
-      // Buat catatan History
       const newHistory = await tx.history.create({
         data: {
           toolId,
@@ -130,7 +133,6 @@ export async function createBorrowRecord(
     });
   } catch (error: any) {
     console.error("Database Error (createBorrowRecord):", error);
-    // Tampilkan pesan error yang lebih mudah dipahami
     throw new Error(error.message || "Gagal melakukan peminjaman.");
   }
 }
@@ -142,7 +144,6 @@ export async function getBorrowHistory(): Promise<BorrowRecord[]> {
       orderBy: { createdAt: "desc" },
     });
 
-    // Mapping dari Model History (DB) ke Interface BorrowRecord (FE)
     return historyRecords.map((record) => ({
       id: record.id,
       nim: record.nim,
@@ -150,15 +151,63 @@ export async function getBorrowHistory(): Promise<BorrowRecord[]> {
       phone: record.phone ?? "",
       item: record.toolName,
       qty: record.qty,
-      // Format tanggal ke string sederhana YYYY-MM-DD
       borrowDate: record.createdAt.toISOString().split("T")[0],
-      // LOGIC PENGEMBALIAN SEMENTARA:
-      // Karena model History tidak punya field 'returnDate', kita gunakan '-' sebagai 'Belum Kembali'.
-      // Di sistem riil, Anda perlu menambahkan field 'isReturned: Boolean' atau 'returnDate: DateTime' ke model History.
-      returnDate: "-",
+      returnDate: record.isReturned ? "Dikembalikan" : "-",
     }));
   } catch (error) {
     console.error("Database Error (getBorrowHistory):", error);
     throw new Error("Gagal mengambil data riwayat peminjaman.");
+  }
+}
+
+export async function updateBorrowRecord(
+  id: number,
+  updates: Partial<BorrowRecord>
+) {
+  try {
+    // First, get the current record to know the tool and quantity
+    const currentRecord = await prisma.history.findUnique({
+      where: { id },
+    });
+
+    if (!currentRecord) {
+      throw new Error("Catatan peminjaman tidak ditemukan.");
+    }
+
+    // Check if we're marking as returned (transitioning from not returned to returned)
+    const isMarkingAsReturned =
+      !currentRecord.isReturned && updates.returnDate === "Dikembalikan";
+
+    return await prisma.$transaction(async (tx) => {
+      // If marking as returned, restore the stock
+      if (isMarkingAsReturned) {
+        await tx.tool.update({
+          where: { id: currentRecord.toolId },
+          data: {
+            borrowed: { decrement: currentRecord.qty },
+          },
+        });
+      }
+
+      // Update the history record
+      return await tx.history.update({
+        where: { id },
+        data: {
+          ...(updates.nim && { nim: updates.nim }),
+          ...(updates.name && { borrower: updates.name }),
+          ...(updates.phone && { phone: updates.phone }),
+          ...(updates.item && { toolName: updates.item }),
+          ...(updates.qty && { qty: updates.qty }),
+          ...(updates.returnDate && {
+            isReturned: updates.returnDate === "Dikembalikan",
+            returnedAt:
+              updates.returnDate === "Dikembalikan" ? new Date() : null,
+          }),
+        },
+      });
+    });
+  } catch (error) {
+    console.error("Database Error (updateBorrowRecord):", error);
+    throw new Error("Gagal memperbarui data peminjaman.");
   }
 }

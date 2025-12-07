@@ -1,12 +1,14 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect } from "react";
 import { Plus, Minus, X } from "lucide-react"; // Mengganti ArrowLeft dengan X (Close)
 import Image from "next/image";
 import Navbar from "@/src/components/Navbar";
 import SearchBar from "@/src/components/SearchBar";
 import ItemCard from "@/src/components/ItemCard";
-import { Item, BorrowFormData } from "@/app/types";
+import type { Item, BorrowFormData } from "@/app/types";
 import { getTools, createBorrowRecord } from "@/src/actions/toolActions";
 
 // --- Styling Helpers ---
@@ -98,7 +100,7 @@ const BorrowModal: React.FC<BorrowModalProps> = ({
 
   return (
     // Backdrop gelap
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center p-4">
       {/* Modal Box Floating */}
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-4xl relative overflow-hidden transform transition-all duration-300 scale-100"
@@ -116,7 +118,7 @@ const BorrowModal: React.FC<BorrowModalProps> = ({
           <div className="lg:col-span-2 p-8 bg-gray-50 border-r flex flex-col justify-center items-center">
             <div className="w-full h-64 mb-4 relative rounded-lg overflow-hidden shadow-lg">
               <Image
-                src={item.image}
+                src={item.image || "/placeholder.svg"}
                 alt={item.name}
                 fill
                 className="object-cover"
