@@ -1,355 +1,273 @@
-# 📦 Sistem Peminjaman Barang
+# Sistem Peminjaman Barang
 
-Aplikasi web modern untuk mengelola sistem peminjaman barang/komponen elektronik dengan antarmuka yang user-friendly dan fitur lengkap.
-
----
-
-## 🎯 Fitur Utama
-
-- **📊 Dashboard Peminjaman** - Tampilkan dan kelola semua barang yang sedang dipinjam
-- **🛠️ Manajemen Barang** - Tambah, edit, dan hapus item barang dengan kategori yang terorganisir
-- **📋 Riwayat Peminjaman** - Tracking lengkap status pengembalian barang dengan timestamp otomatis
-- **🔐 Proteksi Password** - Akses terbatas ke halaman manajemen dan riwayat
-- **📱 Responsive Design** - Desain modern yang optimal di semua perangkat (desktop, tablet, mobile)
-- **⚡ Real-time Updates** - Stok barang otomatis ter-update saat peminjaman dan pengembalian
+Aplikasi web untuk mengelola peminjaman alat dan bahan laboratorium secara mudah, cepat, dan efisien.
 
 ---
 
-## 🛠️ Tech Stack
+## Fitur Utama
 
-| Layer                | Teknologi                              |
-| -------------------- | -------------------------------------- |
-| **Frontend**         | React 19.2, Next.js 16, TypeScript     |
-| **Styling**          | Tailwind CSS 4.1, Shadcn/UI Components |
-| **Backend**          | Next.js API Routes, Server Actions     |
-| **Database**         | SQLite + Prisma ORM                    |
-| **Icons**            | Lucide React                           |
-| **Session**          | Iron Session                           |
-| **State Management** | React Hooks                            |
+- Manajemen alat: tambah, edit, dan hapus data alat
+- Sistem peminjaman dengan data peminjam yang lengkap
+- Riwayat peminjaman dan pengembalian secara real-time
+- Manajemen stok otomatis
+- Halaman manajemen dan riwayat dilindungi password
+- Antarmuka modern berbasis Tailwind CSS
 
 ---
 
-## 📋 Requirements
+## Tech Stack
 
-### Prasyarat Sistem
+### Frontend
+- Next.js 16  
+- React 19.2  
+- Tailwind CSS 4  
+- Lucide Icons  
 
-- **Node.js** >= 18.0.0
-- **npm** atau **pnpm** (package manager)
-- **Git** untuk version control
-- Storage disk minimal 100MB
+### Backend & Database
+- Node.js  
+- Prisma ORM  
+- SQLite  
 
-### Browser yang Didukung
-
-- Chrome/Chromium >= 90
-- Firefox >= 88
-- Safari >= 14
-- Edge >= 90
+### Development Tools
+- TypeScript  
+- ESLint  
+- PostCSS  
 
 ---
 
-## 🚀 Panduan Instalasi & Setup
+## Requirements
 
-### 1️⃣ Clone Repository
+- Node.js versi 18 atau lebih tinggi  
+- npm atau yarn  
+- Git
 
-\`\`\`bash
+---
+
+## Instalasi & Setup
+
+### 1. Clone Repository
+```bash
 git clone <repository-url>
 cd sistem-peminjaman-barang
-\`\`\`
+````
 
-### 2️⃣ Install Dependencies
+### 2. Install Dependencies
 
-\`\`\`bash
+```bash
 npm install
-
-# atau jika menggunakan pnpm
-
-pnpm install
-\`\`\`
-
-### 3️⃣ Setup Environment Variables
-
-Buat file `.env.local` di root directory:
-
-\`\`\`env
-
-# Database
-
-DATABASE_URL="file:./dev.db"
-
-# Session Secret (generate dengan openssl rand -hex 32)
-
-IRON_SESSION_PASSWORD="your-32-character-hex-string"
-\`\`\`
-
-### 4️⃣ Setup Database
-
-Jalankan Prisma migration untuk membuat database:
-
-\`\`\`bash
-npx prisma migrate dev --name init
-\`\`\`
-
-Jika ingin seed database dengan data contoh:
-\`\`\`bash
-npx prisma db seed
-\`\`\`
-
-### 5️⃣ Jalankan Development Server
-
-\`\`\`bash
-npm run dev
-
 # atau
+yarn install
+```
 
-pnpm dev
-\`\`\`
+### 3. Setup Environment Variables
 
-Aplikasi akan tersedia di: **http://localhost:3000**
+Buat file `.env.local`:
 
-### 6️⃣ Build untuk Production
+```bash
+DATABASE_URL="file:./dev.db"
+```
 
-\`\`\`bash
-npm run build
-npm start
-\`\`\`
+### 4. Setup Database
+
+```bash
+npx prisma migrate dev --name init
+```
+
+### 5. Jalankan Development Server
+
+```bash
+npm run dev
+# atau
+yarn dev
+```
+
+Aplikasi dapat diakses pada:
+`http://localhost:3000`
 
 ---
 
-## 📁 Struktur Project
+## Panduan Penggunaan
 
-\`\`\`
+### Navigasi Utama
+
+* Beranda
+* Peminjaman
+* Manajemen (memerlukan password)
+* Riwayat (memerlukan password)
+
+---
+
+### Tambah Alat Baru (Manajemen)
+
+1. Buka halaman Manajemen, masukkan password: `teknisidtee`
+2. Klik "Tambah Alat"
+3. Isi:
+
+   * Nama alat
+   * Kategori
+   * Deskripsi
+   * Stok
+4. Klik "Simpan"
+
+### Pinjam Alat (Peminjaman)
+
+1. Buka halaman Peminjaman
+2. Pilih alat dari daftar
+3. Isi:
+
+   * NIM
+   * Nama
+   * Nomor telepon
+   * Jumlah yang dipinjam
+4. Klik "Pinjam"
+
+### Kembalikan Alat (Riwayat)
+
+1. Buka halaman Riwayat, masukkan password: `teknisidtee`
+2. Cari peminjaman yang ingin dikembalikan
+3. Klik "Dikembalikan"
+
+Sistem akan:
+
+* Mengembalikan stok
+* Mencatat tanggal kembali
+* Mengubah status menjadi "Dikembalikan"
+
+### Edit Data Alat
+
+1. Buka halaman Manajemen
+2. Klik "Edit"
+3. Atur data yang diperlukan
+4. Klik "Simpan"
+
+### Edit Data Peminjaman
+
+1. Buka halaman Riwayat
+2. Klik "Edit"
+3. Ubah data peminjaman
+4. Klik "Simpan"
+
+---
+
+## Keamanan
+
+Password halaman Manajemen dan Riwayat:
+
+```
+teknisidtee
+```
+
+---
+
+## Database Schema
+
+### Model Tool
+
+```
+id          - Identifier
+name        - Nama alat
+category    - Kategori alat
+description - Deskripsi
+quantity    - Stok total
+borrowed    - Jumlah dipinjam
+imageUrl    - Gambar (opsional)
+createdAt   - Waktu pembuatan
+```
+
+### Model History
+
+```
+id          - Identifier
+toolId      - Reference ke Tool
+toolName    - Nama alat
+qty         - Jumlah dipinjam
+nim         - NIM peminjam
+borrower    - Nama peminjam
+phone       - Nomor telepon
+isReturned  - Status
+returnedAt  - Tanggal kembali
+createdAt   - Tanggal pinjam
+```
+
+---
+
+## Struktur Project
+
+```
 sistem-peminjaman-barang/
-├── app/ # Next.js App Router
-│ ├── page.tsx # Halaman Home
-│ ├── peminjaman/ # Halaman Peminjaman
-│ ├── manajemen/ # Halaman Manajemen Barang
-│ ├── riwayat/ # Halaman Riwayat Peminjaman
-│ ├── api/ # API Routes
-│ └── layout.tsx # Root Layout
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── manajemen/
+│   ├── peminjaman/
+│   ├── riwayat/
+│   ├── globals.css
+│   └── types.ts
 ├── src/
-│ ├── actions/ # Server Actions (toolActions.ts)
-│ └── components/ # Reusable Components
-│ ├── Navbar.tsx # Navigation Bar
-│ ├── Toast.tsx # Notification System
-│ ├── SearchBar.tsx # Search Component
-│ └── ...
-├── components/ui/ # Shadcn/UI Components Library
+│   ├── components/
+│   │   ├── Navbar.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── ItemCard.tsx
+│   │   └── Toast.tsx
+│   └── actions/
+│       └── toolActions.ts
 ├── prisma/
-│ ├── schema.prisma # Database Schema
-│ └── dev.db # SQLite Database
-├── public/ # Static Assets
-├── lib/ # Utility Functions
-├── hooks/ # Custom React Hooks
-└── styles/ # Global Styles
-
-\`\`\`
+│   ├── schema.prisma
+│   └── dev.db
+├── components/ui/
+├── public/
+└── package.json
+```
 
 ---
 
-## 🔑 Credentials & Keamanan
-
-### Password Proteksi
-
-- **Username**: Admin
-- **Password**: `teknisidtee`
-
-> ⚠️ **Penting**: Ubah password default di production environment!
-
-### Session Management
-
-- Menggunakan `iron-session` untuk secure session storage
-- Session cookies tersimpan secara HTTP-only
-- Auto-logout setelah inactivity tertentu
-
----
-
-## 📊 Database Schema
-
-### Model: Tool (Barang)
-
-\`\`\`prisma
-model Tool {
-id Int @id @default(autoincrement())
-name String // Nama barang
-category String // Kategori (Mikrokontroler, Kabel, dll)
-description String // Deskripsi barang
-quantity Int // Stok total
-borrowed Int // Jumlah yang sedang dipinjam
-imageUrl String? // URL gambar barang
-createdAt DateTime @default(now())
-}
-\`\`\`
-
-### Model: History (Riwayat Peminjaman)
-
-\`\`\`prisma
-model History {
-id Int @id @default(autoincrement())
-toolId Int // Reference ke Tool
-toolName String // Nama barang (snapshot)
-qty Int // Jumlah yang dipinjam
-nim String // NIM Peminjam
-borrower String // Nama Peminjam
-phone String? // No. Telepon Peminjam
-isReturned Boolean // Status pengembalian
-returnedAt DateTime? // Tanggal pengembalian (auto-set)
-createdAt DateTime @default(now())
-}
-\`\`\`
-
----
-
-## 🎨 Kategori Barang yang Tersedia
-
-- 🔌 **Mikrokontroler** - Arduino, STM32, Raspberry Pi
-- 🔗 **Kabel** - USB, HDMI, Jumper wires
-- 📍 **Resistor** - Berbagai ohm values
-- ⚡ **Kapasitor** - Electrolytic, Ceramic
-- 📡 **Sensor** - DHT, Ultrasonic, Flame
-- 🎛️ **Aktuator** - Motor, Servo, Relay
-- 📦 **Lain-lain** - Komponen lainnya
-
----
-
-## 🎯 Panduan Penggunaan
-
-### Halaman Peminjaman
-
-1. Cari barang menggunakan search bar
-2. Klik tombol peminjaman pada barang
-3. Isi form peminjaman (NIM, Nama, No. Telp)
-4. Submit untuk mencatat peminjaman
-5. Toast notifikasi akan muncul saat berhasil
-
-### Halaman Manajemen (Proteksi Password)
-
-1. Klik "Manajemen" di navbar
-2. Masukkan password: `teknisidtee`
-3. Kelola barang: Tambah, Edit, Hapus
-4. Kategori dapat dipilih dari dropdown list
-
-### Halaman Riwayat (Proteksi Password)
-
-1. Klik "Riwayat" di navbar
-2. Masukkan password: `teknisidtee`
-3. Lihat semua history peminjaman
-4. Klik tombol "Edit" untuk modify data
-5. Klik tombol "Dikembalikan" untuk mark barang sebagai dikembalikan
-6. Tanggal pengembalian otomatis terisi dengan timestamp saat diklik
-
----
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Database Error
 
-\`\`\`
-PrismaClientInitializationError
-\`\`\`
-**Solusi**: Jalankan `npx prisma migrate dev` untuk sync schema dengan database
+```bash
+npx prisma migrate reset
+# atau
+rm prisma/dev.db
+npx prisma migrate dev --name init
+```
 
-### Port 3000 Sudah Terpakai
+### Port 3000 Sudah Digunakan
 
-\`\`\`bash
-
-# Gunakan port berbeda
-
+```bash
 npm run dev -- -p 3001
-\`\`\`
+```
 
-### Password Tidak Bekerja
+### Module Not Found
 
-- Pastikan password yang dimasukkan: `teknisidtee`
-- Clear browser cookies dan coba lagi
-- Restart development server
-
----
-
-## 📝 Environment Variables Reference
-
-\`\`\`env
-
-# Wajib
-
-DATABASE_URL=file:./dev.db
-IRON_SESSION_PASSWORD=your-32-hex-string
-
-# Optional
-
-NODE_ENV=development
-\`\`\`
-
----
-
-## 🔄 Development Workflow
-
-\`\`\`bash
-
-# Start dev server
-
+```bash
+rm -rf node_modules .next
+npm install
 npm run dev
-
-# Build untuk production
-
-npm run build
-
-# Check TypeScript errors
-
-npx tsc --noEmit
-
-# Database management
-
-npx prisma studio # Visual database editor
-npx prisma migrate dev # Create & apply migration
-npx prisma db push # Push schema ke database
-\`\`\`
+```
 
 ---
 
-## 📦 Deployment
+## Build & Deploy
 
-### Deploy ke Vercel (Recommended)
+### Build Production
 
-\`\`\`bash
-
-# Connect GitHub repository ke Vercel
-
-# Set environment variables di Vercel dashboard
-
-# Auto-deploy on push ke main branch
-
-\`\`\`
-
-### Deploy Lokal
-
-\`\`\`bash
+```bash
 npm run build
 npm start
-\`\`\`
+```
 
 ---
 
-## 📄 Lisensi
+## License
 
-Proyek ini adalah internal project untuk [Institut/Organisasi].
-
----
-
-## 👥 Kontribusi
-
-Untuk kontribusi atau report bugs, silakan buat issue di repository.
+Proprietary — Hak Cipta Teknisi IT
 
 ---
 
-## 📞 Support
+## Support
 
-Jika mengalami masalah atau pertanyaan:
+Untuk masalah atau pertanyaan, hubungi administrator sistem.
 
-1. Baca dokumentasi di README ini
-2. Check troubleshooting section
-3. Hubungi admin sistem
 
----
-
-**Last Updated**: Desember 2024  
-**Version**: 1.0.0
+Cheers
