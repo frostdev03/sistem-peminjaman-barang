@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Edit2, Check } from "lucide-react";
 import Navbar from "@/src/components/Navbar";
+import { Toast, useToast } from "@/src/components/Toast";
 import type { BorrowRecord } from "@/app/types";
 import {
   getBorrowHistory,
@@ -15,6 +16,7 @@ export default function RiwayatPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BorrowRecord | null>(null);
   const [editFormData, setEditFormData] = useState<BorrowRecord | null>(null);
+  const { messages, addToast, removeToast } = useToast();
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -25,13 +27,13 @@ export default function RiwayatPage() {
         setHistory(data as BorrowRecord[]);
       } catch (error: any) {
         console.error("[v0] Error fetching history:", error);
-        alert("Gagal memuat riwayat: " + error.message);
+        addToast("Gagal memuat riwayat: " + error.message, "error");
       } finally {
         setIsLoading(false);
       }
     };
     fetchHistory();
-  }, []);
+  }, [addToast]);
 
   const handleEditClick = (record: BorrowRecord) => {
     setEditingRecord(record);
@@ -43,19 +45,19 @@ export default function RiwayatPage() {
     try {
       console.log("[v0] Marking record as returned:", record.id);
       await updateBorrowRecord(record.id, {
-        returnDate: "Dikembalikan",
-        // returnDate: new Date().toISOString().split("T")[0],
-      });
+        returnDate: "returned", // Flag to trigger the backend logic
+      } as any);
       console.log("[v0] Record marked as returned successfully");
 
       const data = await getBorrowHistory();
       setHistory(data as BorrowRecord[]);
-      alert(
-        "Status berhasil diperbarui menjadi Dikembalikan! Stok barang dikembalikan."
+      addToast(
+        "Status berhasil diperbarui menjadi Dikembalikan! Stok barang dikembalikan.",
+        "success"
       );
     } catch (error: any) {
       console.error("[v0] Error marking returned:", error);
-      alert("Gagal memperbarui status: " + error.message);
+      addToast("Gagal memperbarui status: " + error.message, "error");
     }
   };
 
@@ -73,10 +75,10 @@ export default function RiwayatPage() {
         const data = await getBorrowHistory();
         setHistory(data as BorrowRecord[]);
         setShowEditModal(false);
-        alert("Data berhasil diperbarui!");
+        addToast("Data berhasil diperbarui!", "success");
       } catch (error: any) {
         console.error("[v0] Error saving edit:", error);
-        alert("Gagal memperbarui data: " + error.message);
+        addToast("Gagal memperbarui data: " + error.message, "error");
       }
     }
   };
@@ -92,6 +94,7 @@ export default function RiwayatPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <Toast messages={messages} onRemove={removeToast} />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Riwayat Peminjaman</h1>
@@ -150,14 +153,12 @@ export default function RiwayatPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          record.returnDate === "-" ||
-                          record.returnDate === "Belum Kembali"
+                          record.returnDate === "-"
                             ? "bg-orange-100 text-orange-700"
                             : "bg-green-100 text-green-700"
                         }`}
                       >
-                        {record.returnDate === "-" ||
-                        record.returnDate === "Belum Kembali"
+                        {record.returnDate === "-"
                           ? "Belum Dikembalikan"
                           : "Dikembalikan"}
                       </span>

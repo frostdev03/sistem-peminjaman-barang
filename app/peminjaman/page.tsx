@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-
+import { Toast, useToast } from "@/src/components/Toast";
 import { useState, useEffect } from "react";
 import { Plus, Minus, X } from "lucide-react"; // Mengganti ArrowLeft dengan X (Close)
 import Image from "next/image";
@@ -284,6 +284,7 @@ export default function PeminjamanPage() {
   const [items, setItems] = useState<Item[]>([]);
   // quantity dan showForm dipindahkan ke Modal
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { messages, addToast, removeToast } = useToast();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -291,13 +292,13 @@ export default function PeminjamanPage() {
         const data = await getTools();
         setItems(data as Item[]);
       } catch (error: any) {
-        alert("Gagal memuat data: " + error.message);
+        addToast("Gagal memuat data: " + error.message, "error");
       } finally {
         setIsLoading(false);
       }
     };
     fetchItems();
-  }, []);
+  }, [addToast]);
 
   const filteredItems = items.filter(
     (item) =>
@@ -323,13 +324,13 @@ export default function PeminjamanPage() {
 
     try {
       await createBorrowRecord(selectedItem.id, quantity, formData);
-      alert("Peminjaman berhasil dikonfirmasi!");
+      addToast("Peminjaman berhasil dikonfirmasi!", "success");
 
       // Refresh data setelah peminjaman berhasil
       const refreshedData = await getTools();
       setItems(refreshedData as Item[]);
     } catch (error: any) {
-      alert("Gagal melakukan peminjaman: " + error.message);
+      addToast("Gagal melakukan peminjaman: " + error.message, "error");
       throw error; // Re-throw agar modal tahu konfirmasi gagal
     } finally {
       setIsSubmitting(false);
@@ -352,6 +353,7 @@ export default function PeminjamanPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
+      <Toast messages={messages} onRemove={removeToast} />
 
       <div
         className="container mx-auto py-8"

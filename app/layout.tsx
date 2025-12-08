@@ -14,7 +14,7 @@
 // //           <nav className="bg-white border-b p-4">
 // //             <div className="container mx-auto flex items-center gap-4">
 // //               <a href="/" className="font-bold">
-// //                 LabLoan
+// //                 Pinjam Lab
 // //               </a>
 // //               <a href="/peminjaman" className="ml-4 text-sm">
 // //                 Peminjaman
@@ -41,8 +41,8 @@
 // import "./globals.css";
 
 // export const metadata: Metadata = {
-//   title: "Peminjaman Alat & Bahan",
-//   description: "Sistem Peminjaman Alat dan Bahan Laboratorium",
+//   title: "Peminjaman Alat & Komponen",
+//   description: "Sistem Peminjaman Alat dan Komponen Laboratorium",
 // };
 
 // export default function RootLayout({
@@ -62,9 +62,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Peminjaman Alat & Bahan",
+  title: "Peminjaman Alat & Komponen",
   description:
-    "Sistem Peminjaman Alat dan Bahan Laboratorium - Modern Management System",
+    "Sistem Peminjaman Alat dan Komponen Laboratorium - Modern Management System",
 };
 
 export default function RootLayout({

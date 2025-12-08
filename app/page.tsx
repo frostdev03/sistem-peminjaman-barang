@@ -28,7 +28,7 @@ export default function Home() {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Package className="w-6 h-6 text-blue-600" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">LabLoan</h1>
+            <h1 className="text-xl font-bold text-gray-900">Pinjam Lab</h1>
           </div>
         </div>
       </nav>
@@ -43,7 +43,7 @@ export default function Home() {
           </div>
 
           <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
-            Sistem Peminjaman Alat & Bahan
+            Sistem Peminjaman Alat & Komponen
           </h2>
 
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
@@ -105,7 +105,7 @@ export default function Home() {
       <footer className="border-t border-gray-100 bg-gray-50 py-8 mt-20">
         <div className="container mx-auto px-6 text-center text-gray-600 text-sm">
           <p>
-            © 2025 LabLoan - Sistem Peminjaman Alat & Bahan. All rights
+            © 2025 Pinjam Lab - Sistem Peminjaman Alat & Komponen. All rights
             reserved.
           </p>
         </div>

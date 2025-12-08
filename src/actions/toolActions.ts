@@ -152,7 +152,9 @@ export async function getBorrowHistory(): Promise<BorrowRecord[]> {
       item: record.toolName,
       qty: record.qty,
       borrowDate: record.createdAt.toISOString().split("T")[0],
-      returnDate: record.isReturned ? "Dikembalikan" : "-",
+      returnDate: record.returnedAt
+        ? record.returnedAt.toISOString().split("T")[0]
+        : "-",
     }));
   } catch (error) {
     console.error("Database Error (getBorrowHistory):", error);
@@ -165,7 +167,6 @@ export async function updateBorrowRecord(
   updates: Partial<BorrowRecord>
 ) {
   try {
-    // First, get the current record to know the tool and quantity
     const currentRecord = await prisma.history.findUnique({
       where: { id },
     });
@@ -174,12 +175,12 @@ export async function updateBorrowRecord(
       throw new Error("Catatan peminjaman tidak ditemukan.");
     }
 
-    // Check if we're marking as returned (transitioning from not returned to returned)
     const isMarkingAsReturned =
-      !currentRecord.isReturned && updates.returnDate === "Dikembalikan";
+      !currentRecord.isReturned &&
+      updates.returnDate &&
+      updates.returnDate !== "-";
 
     return await prisma.$transaction(async (tx) => {
-      // If marking as returned, restore the stock
       if (isMarkingAsReturned) {
         await tx.tool.update({
           where: { id: currentRecord.toolId },
@@ -189,7 +190,6 @@ export async function updateBorrowRecord(
         });
       }
 
-      // Update the history record
       return await tx.history.update({
         where: { id },
         data: {
@@ -198,11 +198,11 @@ export async function updateBorrowRecord(
           ...(updates.phone && { phone: updates.phone }),
           ...(updates.item && { toolName: updates.item }),
           ...(updates.qty && { qty: updates.qty }),
-          ...(updates.returnDate && {
-            isReturned: updates.returnDate === "Dikembalikan",
-            returnedAt:
-              updates.returnDate === "Dikembalikan" ? new Date() : null,
-          }),
+          ...(updates.returnDate &&
+            updates.returnDate !== "-" && {
+              isReturned: true,
+              returnedAt: new Date(),
+            }),
         },
       });
     });

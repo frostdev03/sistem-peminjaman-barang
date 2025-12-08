@@ -14,6 +14,7 @@ import {
   updateTool,
   deleteTool,
 } from "@/src/actions/toolActions"; // Fixed import path from @/src/src/actions to @/src/actions
+import { Toast, useToast } from "@/src/components/Toast";
 
 const CATEGORY_OPTIONS = [
   "Mikrokontroler",
@@ -38,6 +39,7 @@ export default function ManajemenPage() {
     image: "",
   });
   const [isLoading, setIsLoading] = useState(true);
+  const { messages, addToast, removeToast } = useToast();
 
   const fetchItems = async () => {
     try {
@@ -47,7 +49,7 @@ export default function ManajemenPage() {
       setItems(data as Item[]);
     } catch (error: any) {
       console.error("[v0] Error fetching items:", error);
-      alert("Gagal memuat data: " + error.message);
+      addToast("Gagal memuat data: " + error.message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -65,17 +67,17 @@ export default function ManajemenPage() {
     ) {
       try {
         await deleteTool(id); // <-- Panggil Server Action
-        alert("Barang berhasil dihapus!");
+        addToast("Barang berhasil dihapus!", "success");
         await fetchItems(); // Refresh data
       } catch (error: any) {
-        alert("Gagal menghapus barang: " + error.message);
+        addToast("Gagal menghapus barang: " + error.message, "error");
       }
     }
   };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.stock) {
-      alert("Nama Barang dan Stok wajib diisi!");
+      addToast("Nama Barang dan Stok wajib diisi!", "error");
       return;
     }
 
@@ -85,19 +87,19 @@ export default function ManajemenPage() {
         console.log("[v0] Updating tool with ID:", editingItem.id);
         await updateTool(editingItem.id, formData);
         console.log("[v0] Tool updated successfully");
-        alert("Barang berhasil diupdate!");
+        addToast("Barang berhasil diupdate!", "success");
       } else {
         console.log("[v0] Creating new tool");
         await createTool(formData);
         console.log("[v0] Tool created successfully");
-        alert("Barang berhasil ditambahkan!");
+        addToast("Barang berhasil ditambahkan!", "success");
       }
 
       await fetchItems();
       setShowModal(false);
     } catch (error: any) {
       console.error("[v0] Error submitting form:", error);
-      alert("Gagal menyimpan data: " + error.message);
+      addToast("Gagal menyimpan data: " + error.message, "error");
     }
   };
 
@@ -142,6 +144,7 @@ export default function ManajemenPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <Toast messages={messages} onRemove={removeToast} />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
