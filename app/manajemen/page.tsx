@@ -7,35 +7,27 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import Navbar from "@/src/components/Navbar"; // Pastikan path benar
 import SearchBar from "@/src/components/SearchBar"; // Pastikan path benar
 import ImageUpload from "@/src/components/ImageUpload"; // Pastikan path benar
-import { Item, ItemFormData } from "@/app/types"; // Pastikan tipe terdefinisi
+import type { Item, ItemFormData } from "@/app/types"; // Pastikan tipe terdefinisi
 import {
   getTools,
   createTool,
   updateTool,
   deleteTool,
-} from "@/src/actions/toolActions";
+} from "@/src/actions/toolActions"; // Fixed import path from @/src/src/actions to @/src/actions
+import { Toast, useToast } from "@/src/components/Toast";
 
-// const initialItems: Item[] = [
-//   {
-//     id: 1,
-//     name: "Laptop Asus ROG",
-//     category: "Elektronik",
-//     stock: 5,
-//     image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400",
-//     description: "Laptop gaming untuk keperluan programming dan desain",
-//   },
-//   {
-//     id: 2,
-//     name: "Proyektor Epson",
-//     category: "Elektronik",
-//     stock: 3,
-//     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400",
-//     description: "Proyektor HD untuk presentasi",
-//   },
-// ];
+const CATEGORY_OPTIONS = [
+  "Mikrokontroler",
+  "Kabel",
+  "Resistor",
+  "Kapasitor",
+  "Sensor",
+  "Aktuator",
+  "Lain-lain",
+];
 
 export default function ManajemenPage() {
-  //   const [items, setItems] = useState<Item[]>(initialItems);
+  const [items, setItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -46,15 +38,18 @@ export default function ManajemenPage() {
     description: "",
     image: "",
   });
-  const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { messages, addToast, removeToast } = useToast();
 
   const fetchItems = async () => {
     try {
+      console.log("[v0] Fetching items from database...");
       const data = await getTools();
+      console.log("[v0] Items fetched successfully:", data);
       setItems(data as Item[]);
     } catch (error: any) {
-      alert(error.message);
+      console.error("[v0] Error fetching items:", error);
+      addToast("Gagal memuat data: " + error.message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -72,49 +67,41 @@ export default function ManajemenPage() {
     ) {
       try {
         await deleteTool(id); // <-- Panggil Server Action
-        alert("Barang berhasil dihapus!");
+        addToast("Barang berhasil dihapus!", "success");
         await fetchItems(); // Refresh data
       } catch (error: any) {
-        alert("Gagal menghapus barang: " + error.message);
+        addToast("Gagal menghapus barang: " + error.message, "error");
       }
     }
   };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.stock) {
-      alert("Nama Barang dan Stok wajib diisi!");
+      addToast("Nama Barang dan Stok wajib diisi!", "error");
       return;
     }
 
     try {
+      console.log("[v0] Submitting form data:", formData);
       if (editingItem && editingItem.id) {
-        await updateTool(editingItem.id, formData); // <-- Panggil Server Action (UPDATE)
-        alert("Barang berhasil diupdate!");
+        console.log("[v0] Updating tool with ID:", editingItem.id);
+        await updateTool(editingItem.id, formData);
+        console.log("[v0] Tool updated successfully");
+        addToast("Barang berhasil diupdate!", "success");
       } else {
-        await createTool(formData); // <-- Panggil Server Action (CREATE)
-        alert("Barang berhasil ditambahkan!");
+        console.log("[v0] Creating new tool");
+        await createTool(formData);
+        console.log("[v0] Tool created successfully");
+        addToast("Barang berhasil ditambahkan!", "success");
       }
 
-      await fetchItems(); // Refresh data
+      await fetchItems();
       setShowModal(false);
     } catch (error: any) {
-      alert("Gagal menyimpan data: " + error.message);
+      console.error("[v0] Error submitting form:", error);
+      addToast("Gagal menyimpan data: " + error.message, "error");
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-xl font-semibold">
-        Memuat data manajemen...
-      </div>
-    );
-  }
-
-  const filteredItems = items.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddItem = () => {
     setEditingItem(null);
@@ -140,61 +127,29 @@ export default function ManajemenPage() {
     setShowModal(true);
   };
 
-  //   const handleDeleteItem = (id: number) => {
-  //     if (window.confirm("Yakin ingin menghapus barang ini?")) {
-  //       setItems(items.filter((item) => item.id !== id));
-  //       alert("Barang berhasil dihapus!");
-  //     }
-  //   };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-xl font-semibold">
+        Memuat data manajemen...
+      </div>
+    );
+  }
 
-  //   const handleSubmit = () => {
-  //     if (!formData.name || !formData.category || !formData.stock) {
-  //       alert("Mohon lengkapi semua data!");
-  //       return;
-  //     }
-
-  //     const finalImage =
-  //       formData.image ||
-  //       "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400";
-
-  //     if (editingItem) {
-  //       setItems(
-  //         items.map((item) =>
-  //           item.id === editingItem.id
-  //             ? {
-  //                 ...item,
-  //                 ...formData,
-  //                 stock: parseInt(formData.stock),
-  //                 image: finalImage,
-  //               }
-  //             : item
-  //         )
-  //       );
-  //       alert("Barang berhasil diupdate!");
-  //     } else {
-  //       const newItem: Item = {
-  //         id: items.length + 1,
-  //         name: formData.name,
-  //         category: formData.category,
-  //         stock: parseInt(formData.stock),
-  //         description: formData.description,
-  //         image: finalImage,
-  //       };
-  //       setItems([...items, newItem]);
-  //       alert("Barang berhasil ditambahkan!");
-  //     }
-  //     setShowModal(false);
-  //   };
+  const filteredItems = items.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <Toast messages={messages} onRemove={removeToast} />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Manajemen Barang</h1>
           <button
-            // Perlu membuat atau menyesuaikan class CSS 'btn-success'
             onClick={handleAddItem}
             className="btn-success flex items-center gap-2"
           >
@@ -266,7 +221,9 @@ export default function ManajemenPage() {
 
         {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-gray-400 bg-opacity-30 flex items-center justify-center z-50 p-4">
+            {" "}
+            {/* Changed backdrop from bg-gray-900 bg-opacity-40 to bg-gray-400 bg-opacity-30 for lighter overlay */}
             <div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
               <h2 className="text-2xl font-bold mb-6">
                 {editingItem ? "Edit Barang" : "Tambah Barang Baru"}
@@ -299,15 +256,20 @@ export default function ManajemenPage() {
                   <label className="block text-sm font-semibold mb-2">
                     Kategori
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.category}
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="input-field"
-                    placeholder="Masukkan kategori"
-                  />
+                    className="input-field cursor-pointer"
+                  >
+                    <option value="">Pilih Kategori</option>
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

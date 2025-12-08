@@ -1,47 +1,49 @@
 "use client";
 
+import type React from "react";
+import { Toast, useToast } from "@/src/components/Toast";
 import { useState, useEffect } from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, X } from "lucide-react"; // Mengganti ArrowLeft dengan X (Close)
 import Image from "next/image";
 import Navbar from "@/src/components/Navbar";
 import SearchBar from "@/src/components/SearchBar";
 import ItemCard from "@/src/components/ItemCard";
-import { Item, BorrowFormData } from "@/app/types";
+import type { Item, BorrowFormData } from "@/app/types";
 import { getTools, createBorrowRecord } from "@/src/actions/toolActions";
 
-// const initialItems: Item[] = [
-//   {
-//     id: 1,
-//     name: "Laptop Asus ROG",
-//     category: "Elektronik",
-//     stock: 5,
-//     image: "",
-//     description: "Laptop gaming untuk keperluan programming dan desain",
-//   },
-//   {
-//     id: 2,
-//     name: "Proyektor Epson",
-//     category: "Elektronik",
-//     stock: 3,
-//     image: "",
-//     description: "Proyektor HD untuk presentasi",
-//   },
-//   {
-//     id: 3,
-//     name: "Kamera DSLR Canon",
-//     category: "Elektronik",
-//     stock: 2,
-//     image: "",
-//     description: "Kamera profesional untuk dokumentasi",
-//   },
-// ];
+// --- Styling Helpers ---
+const classNames = {
+  card: "bg-white shadow-xl rounded-xl p-6 lg:p-8",
+  inputField:
+    "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150",
+  btnPrimary:
+    "w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-200 shadow-md hover:shadow-lg",
+  btnSecondary:
+    "flex-1 py-3 border border-gray-300 text-gray-700 bg-gray-100 rounded-lg font-semibold hover:bg-gray-200 transition duration-200",
+  qtyBtn:
+    "w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition duration-150",
+};
+// -----------------------
 
-export default function PeminjamanPage() {
-  // const [items] = useState<Item[]>(initialItems);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState<Item[]>([]);
+// ==============================================================================
+// 📦 KOMPONEN MODAL BARU (POPUP PEMINJAMAN)
+// ==============================================================================
+
+interface BorrowModalProps {
+  item: Item;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (formData: BorrowFormData, quantity: number) => Promise<void>;
+  availableStock: number;
+}
+
+const BorrowModal: React.FC<BorrowModalProps> = ({
+  item,
+  isOpen,
+  onClose,
+  onConfirm,
+  availableStock,
+}) => {
   const [quantity, setQuantity] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<BorrowFormData>({
@@ -49,20 +51,254 @@ export default function PeminjamanPage() {
     name: "",
     phone: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setShowForm(false);
+      setFormData({ nim: "", name: "", phone: "" });
+    }
+  }, [isOpen]);
+
+  const handleQuantityChange = (delta: number) => {
+    const newQty = quantity + delta;
+    if (newQty >= 1 && newQty <= availableStock) {
+      setQuantity(newQty);
+    }
+  };
+
+  const handlePinjam = () => {
+    if (quantity > availableStock) {
+      alert(`Stok tidak mencukupi! Tersedia: ${availableStock}`);
+      return;
+    }
+    setShowForm(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.nim || !formData.name || !formData.phone) {
+      alert("Mohon lengkapi semua data!");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await onConfirm(formData, quantity);
+      onClose(); // Tutup modal setelah berhasil
+    } catch (error) {
+      // alert error di handle oleh parent/onConfirm
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isQtyMax = quantity >= availableStock;
+  const isQtyMin = quantity <= 1;
+  const isAvailable = availableStock > 0;
+
+  if (!isOpen) return null;
+
+  return (
+    // Backdrop gelap
+    <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center p-4">
+      {/* Modal Box Floating */}
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-4xl relative overflow-hidden transform transition-all duration-300 scale-100"
+        style={{ height: "auto", maxHeight: "90vh" }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 z-10 p-2 rounded-full bg-white transition"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 h-full">
+          {/* KIRI: Gambar dan Detail (Col 2/5) */}
+          <div className="lg:col-span-2 p-8 bg-gray-50 border-r flex flex-col justify-center items-center">
+            <div className="w-full h-64 mb-4 relative rounded-lg overflow-hidden shadow-lg">
+              <Image
+                src={item.image || "/placeholder.svg"}
+                alt={item.name}
+                fill
+                className="object-cover"
+                sizes="100vw"
+              />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 text-center">
+              {item.name}
+            </h2>
+            <p className="text-md font-medium text-blue-600 mb-2">
+              {item.category}
+            </p>
+            <p className="text-sm text-gray-700 text-center">
+              {item.description}
+            </p>
+            <div className="mt-4 p-2 bg-blue-100 rounded-lg w-full text-center">
+              <p className="text-sm font-bold text-gray-800">
+                Stok Tersedia:
+                <span
+                  className={`ml-2 ${
+                    isAvailable ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {availableStock} / {item.stock}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* KANAN: Kontrol Kuantitas & Form (Col 3/5) */}
+          <div className="lg:col-span-3 p-8 flex flex-col justify-between">
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-gray-800">
+                {showForm ? "Masukkan Data Peminjam" : "Tentukan Jumlah Pinjam"}
+              </h3>
+
+              {/* Kontrol Kuantitas (Jika belum menampilkan form) */}
+              {!showForm && (
+                <div className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50">
+                  <span className="font-semibold text-gray-700 mr-4">
+                    Jumlah:
+                  </span>
+                  <button
+                    onClick={() => handleQuantityChange(-1)}
+                    className={classNames.qtyBtn}
+                    disabled={isQtyMin || !isAvailable}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="text-2xl font-extrabold w-12 text-center text-gray-900">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => handleQuantityChange(1)}
+                    className={classNames.qtyBtn}
+                    disabled={isQtyMax || !isAvailable}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Form Peminjaman */}
+              {showForm && (
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-medium">
+                    Anda akan meminjam **{item.name}** sebanyak **{quantity}**
+                    unit.
+                  </div>
+                  {/* Input NIM */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      NIM <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nim}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nim: e.target.value })
+                      }
+                      className={classNames.inputField}
+                      placeholder="Masukkan NIM Anda"
+                      required
+                    />
+                  </div>
+                  {/* Input Nama */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      Nama Lengkap <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className={classNames.inputField}
+                      placeholder="Masukkan nama lengkap"
+                      required
+                    />
+                  </div>
+                  {/* Input Telepon */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      Nomor Telepon <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className={classNames.inputField}
+                      placeholder="Contoh: 081234567890"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tombol Aksi di bagian bawah kanan */}
+            <div className="flex gap-4 pt-6 mt-auto">
+              {showForm && (
+                <button
+                  onClick={() => setShowForm(false)}
+                  className={classNames.btnSecondary}
+                  disabled={isSubmitting}
+                >
+                  Kembali
+                </button>
+              )}
+              <button
+                onClick={showForm ? handleSubmit : handlePinjam}
+                className={classNames.btnPrimary + " flex-1"}
+                disabled={!isAvailable || isSubmitting}
+              >
+                {isSubmitting
+                  ? "Memproses..."
+                  : showForm
+                  ? "Konfirmasi Peminjaman"
+                  : isAvailable
+                  ? "Pinjam Sekarang"
+                  : "Tidak Tersedia"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==============================================================================
+// 🏢 KOMPONEN UTAMA (PeminjamanPage)
+// ==============================================================================
+
+export default function PeminjamanPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  // selectedItem sekarang hanya untuk memicu modal
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>([]);
+  // quantity dan showForm dipindahkan ke Modal
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { messages, addToast, removeToast } = useToast();
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const data = await getTools(); // <-- Panggil Server Action
+        const data = await getTools();
         setItems(data as Item[]);
       } catch (error: any) {
-        alert(error.message);
+        addToast("Gagal memuat data: " + error.message, "error");
       } finally {
         setIsLoading(false);
       }
     };
     fetchItems();
-  }, []);
+  }, [addToast]);
 
   const filteredItems = items.filter(
     (item) =>
@@ -70,224 +306,106 @@ export default function PeminjamanPage() {
       item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleItemClick = (item: Item) => {
-    setSelectedItem(item);
-    setQuantity(1);
-    setShowForm(false);
+  const handleItemCardClick = (item: Item) => {
+    setSelectedItem(item); // Membuka Modal
   };
 
-  const handleQuantityChange = (delta: number) => {
-    if (!selectedItem) return;
-    const newQty = quantity + delta;
-    if (newQty >= 1 && newQty <= selectedItem.stock) {
-      setQuantity(newQty);
-    }
+  const handleCloseModal = () => {
+    setSelectedItem(null); // Menutup Modal
   };
 
-  const handlePinjam = () => {
-    if (!selectedItem) return;
-    if (quantity > selectedItem.stock) {
-      alert("Stok tidak mencukupi!");
-      return;
-    }
-    setShowForm(true);
-  };
-
-  // const handleSubmitPinjam = () => {
-  //   if (!formData.nim || !formData.name || !formData.phone) {
-  //     alert("Mohon lengkapi semua data!");
-  //     return;
-  //   }
-
-  //   // TODO: API call untuk submit peminjaman
-  //   console.log("Submit peminjaman:", {
-  //     item: selectedItem,
-  //     quantity,
-  //     ...formData,
-  //   });
-
-  //   alert("Peminjaman berhasil!");
-  //   setShowForm(false);
-  //   setSelectedItem(null);
-  //   setFormData({ nim: "", name: "", phone: "" });
-  // };
-
-  const handleSubmitPinjam = async () => {
+  const handleConfirmBorrow = async (
+    formData: BorrowFormData,
+    quantity: number
+  ) => {
     if (!selectedItem || !selectedItem.id) return;
-    if (!formData.nim || !formData.name || !formData.phone) {
-      alert("Mohon lengkapi semua data!");
-      return;
-    }
+
+    setIsSubmitting(true);
 
     try {
-      await createBorrowRecord(selectedItem.id, quantity, formData); // <-- Panggil Server Action
-      alert("Peminjaman berhasil dikonfirmasi!");
+      await createBorrowRecord(selectedItem.id, quantity, formData);
+      addToast("Peminjaman berhasil dikonfirmasi!", "success");
 
       // Refresh data setelah peminjaman berhasil
       const refreshedData = await getTools();
       setItems(refreshedData as Item[]);
-
-      setShowForm(false);
-      setSelectedItem(null);
-      setFormData({ nim: "", name: "", phone: "" });
     } catch (error: any) {
-      alert("Gagal melakukan peminjaman: " + error.message);
+      addToast("Gagal melakukan peminjaman: " + error.message, "error");
+      throw error; // Re-throw agar modal tahu konfirmasi gagal
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-xl font-semibold">
-        Memuat data barang...
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl font-semibold text-blue-600">
+          Memuat data barang...
+        </div>
       </div>
     );
   }
 
+  // Menentukan padding horizontal untuk konten utama (agar tidak mepet kiri/kanan)
+  const CONTENT_PADDING_X = "32px"; // Nilai yang lebih besar, misal 32px
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <Navbar />
+      <Toast messages={messages} onRemove={removeToast} />
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Daftar Barang</h1>
+      <div
+        className="container mx-auto py-8"
+        style={{
+          paddingLeft: CONTENT_PADDING_X,
+          paddingRight: CONTENT_PADDING_X,
+        }}
+      >
+        {/* JUDUL: Bold dan Jarak */}
+        <h1 className="text-4xl font-extrabold mb-6 text-gray-800">
+          Daftar Barang Tersedia
+        </h1>
 
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={() => console.log("Search:", searchQuery)}
-        />
+        {/* SEARCH BAR */}
+        <div className="mb-8">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={() => console.log("Search:", searchQuery)}
+          />
+        </div>
 
-        {!selectedItem ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item) => (
-              <ItemCard key={item.id} item={item} onClick={handleItemClick} />
-            ))}
-          </div>
-        ) : (
-          <div className="card p-8 max-w-2xl mx-auto">
-            <button
-              onClick={() => {
-                setSelectedItem(null);
-                setShowForm(false);
-              }}
-              className="text-blue-600 mb-4 hover:underline"
-            >
-              ← Kembali ke daftar
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="w-64 h-64 mx-auto mb-4 bg-gray-100 rounded-lg overflow-hidden relative">
-                <Image
-                  src={selectedItem.image}
-                  alt={selectedItem.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-              <h2 className="text-3xl font-bold mb-2">{selectedItem.name}</h2>
-              <p className="text-gray-600 text-lg">{selectedItem.category}</p>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-gray-700">{selectedItem.description}</p>
-              <p className="text-lg font-semibold mt-4">
-                {/* Stok tersedia: {selectedItem.stock} */}
-                Stok tersedia: {selectedItem.stock - selectedItem.borrowed} /
-                Total: {selectedItem.stock}
-              </p>
-            </div>
-
-            {!showForm ? (
-              <div className="space-y-6">
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => handleQuantityChange(-1)}
-                    className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
-                  >
-                    <Minus className="w-5 h-5" />
-                  </button>
-                  <span className="text-3xl font-bold w-16 text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => handleQuantityChange(1)}
-                    className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-                <button
-                  onClick={handlePinjam}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
-                >
-                  Pinjam Sekarang
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    NIM
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nim}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nim: e.target.value })
-                    }
-                    className="input-field"
-                    placeholder="Masukkan NIM"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Nama Lengkap
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="input-field"
-                    placeholder="Masukkan nama lengkap"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Nomor Telepon
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="input-field"
-                    placeholder="Masukkan nomor telepon"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowForm(false)}
-                    // Perlu membuat atau menyesuaikan class CSS 'btn-secondary'
-                    className="flex-1 btn-secondary py-3 font-semibold"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleSubmitPinjam}
-                    // Perlu membuat atau menyesuaikan class CSS 'btn-primary'
-                    className="flex-1 btn-primary py-3 font-semibold"
-                  >
-                    Konfirmasi Peminjaman
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredItems.map((item) => {
+            const availableStock = item.stock - item.borrowed;
+            return (
+              <ItemCard
+                key={item.id}
+                item={item}
+                onClick={handleItemCardClick}
+                availableStock={availableStock} // Pastikan ini dikirim
+              />
+            );
+          })}
+          {filteredItems.length === 0 && (
+            <p className="col-span-full text-center text-gray-500 mt-10">
+              Tidak ada barang yang sesuai dengan pencarian Anda.
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* MODAL PEMINJAMAN (HANYA MUNCUL JIKA selectedItem ada) */}
+      {selectedItem && (
+        <BorrowModal
+          item={selectedItem}
+          isOpen={!!selectedItem}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmBorrow}
+          availableStock={selectedItem.stock - selectedItem.borrowed}
+        />
+      )}
     </div>
   );
 }

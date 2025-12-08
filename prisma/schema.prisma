@@ -10,6 +10,8 @@ generator client {
 model Tool {
   id        Int     @id @default(autoincrement())
   name      String
+  category  String  @default("Lain-lain")
+  description String @default("")
   quantity  Int
   borrowed  Int     @default(0)
   imageUrl  String?
@@ -24,6 +26,8 @@ model History {
   nim       String
   borrower  String
   phone     String?
+  isReturned Boolean @default(false)
+  returnedAt DateTime?
   createdAt DateTime @default(now())
   @@index([toolId])
 }
