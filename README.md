@@ -1,230 +1,355 @@
-# Setup Instructions - Sistem Peminjaman Barang
+# 📦 Sistem Peminjaman Barang
 
-## Prerequisites
+Aplikasi web modern untuk mengelola sistem peminjaman barang/komponen elektronik dengan antarmuka yang user-friendly dan fitur lengkap.
 
-- Node.js 18+
-- npm/yarn/pnpm
-- Database (PostgreSQL/MySQL/SQLite)
+---
 
-## Installation Steps
+## 🎯 Fitur Utama
 
-### 1. Install Dependencies
+- **📊 Dashboard Peminjaman** - Tampilkan dan kelola semua barang yang sedang dipinjam
+- **🛠️ Manajemen Barang** - Tambah, edit, dan hapus item barang dengan kategori yang terorganisir
+- **📋 Riwayat Peminjaman** - Tracking lengkap status pengembalian barang dengan timestamp otomatis
+- **🔐 Proteksi Password** - Akses terbatas ke halaman manajemen dan riwayat
+- **📱 Responsive Design** - Desain modern yang optimal di semua perangkat (desktop, tablet, mobile)
+- **⚡ Real-time Updates** - Stok barang otomatis ter-update saat peminjaman dan pengembalian
 
-```bash
+---
+
+## 🛠️ Tech Stack
+
+| Layer                | Teknologi                              |
+| -------------------- | -------------------------------------- |
+| **Frontend**         | React 19.2, Next.js 16, TypeScript     |
+| **Styling**          | Tailwind CSS 4.1, Shadcn/UI Components |
+| **Backend**          | Next.js API Routes, Server Actions     |
+| **Database**         | SQLite + Prisma ORM                    |
+| **Icons**            | Lucide React                           |
+| **Session**          | Iron Session                           |
+| **State Management** | React Hooks                            |
+
+---
+
+## 📋 Requirements
+
+### Prasyarat Sistem
+
+- **Node.js** >= 18.0.0
+- **npm** atau **pnpm** (package manager)
+- **Git** untuk version control
+- Storage disk minimal 100MB
+
+### Browser yang Didukung
+
+- Chrome/Chromium >= 90
+- Firefox >= 88
+- Safari >= 14
+- Edge >= 90
+
+---
+
+## 🚀 Panduan Instalasi & Setup
+
+### 1️⃣ Clone Repository
+
+\`\`\`bash
+git clone <repository-url>
+cd sistem-peminjaman-barang
+\`\`\`
+
+### 2️⃣ Install Dependencies
+
+\`\`\`bash
 npm install
-# atau
-yarn install
-```
 
-### 2. Setup Database
+# atau jika menggunakan pnpm
 
-Copy `.env.example` ke `.env` dan sesuaikan `DATABASE_URL`:
+pnpm install
+\`\`\`
 
-```bash
-cp .env.example .env
-```
+### 3️⃣ Setup Environment Variables
 
-Edit `.env`:
+Buat file `.env.local` di root directory:
 
-```
-DATABASE_URL="postgresql://user:password@localhost:5432/peminjaman_barang"
-```
+\`\`\`env
 
-### 3. Run Prisma Migrations
+# Database
 
-```bash
+DATABASE_URL="file:./dev.db"
+
+# Session Secret (generate dengan openssl rand -hex 32)
+
+IRON_SESSION_PASSWORD="your-32-character-hex-string"
+\`\`\`
+
+### 4️⃣ Setup Database
+
+Jalankan Prisma migration untuk membuat database:
+
+\`\`\`bash
 npx prisma migrate dev --name init
-```
+\`\`\`
 
-### 4. Generate Prisma Client
-
-```bash
-npx prisma generate
-```
-
-### 5. (Optional) Seed Database
-
-Buat file `prisma/seed.ts` untuk data dummy:
-
-```typescript
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-async function main() {
-  // Buat beberapa items dummy
-  await prisma.item.createMany({
-    data: [
-      {
-        name: "Proyektor",
-        description: "Proyektor untuk presentasi",
-        stock: 5,
-        image:
-          "https://images.unsplash.com/photo-1573171586976-dfb18e88469d?w=500",
-      },
-      {
-        name: "Laptop",
-        description: "Laptop untuk development",
-        stock: 10,
-        image:
-          "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500",
-      },
-      {
-        name: "Kamera DSLR",
-        description: "Kamera untuk dokumentasi",
-        stock: 3,
-        image:
-          "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500",
-      },
-    ],
-  });
-}
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
-```
-
-Tambahkan di `package.json`:
-
-```json
-{
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
-  }
-}
-```
-
-Run seed:
-
-```bash
+Jika ingin seed database dengan data contoh:
+\`\`\`bash
 npx prisma db seed
-```
+\`\`\`
 
-### 6. Run Development Server
+### 5️⃣ Jalankan Development Server
 
-```bash
+\`\`\`bash
 npm run dev
+
 # atau
-yarn dev
-```
 
-Buka [http://localhost:3000](http://localhost:3000)
+pnpm dev
+\`\`\`
 
-## Konfigurasi Password Admin
+Aplikasi akan tersedia di: **http://localhost:3000**
 
-Edit file `app/manajemen/page.tsx` baris 17:
+### 6️⃣ Build untuk Production
 
-```typescript
-const ADMIN_PASSWORD = "admin123"; // Ganti dengan password yang kamu inginkan
-```
-
-## Fitur Utama
-
-### 1. Peminjaman (/)
-
-- Search bar untuk mencari barang
-- Grid card menampilkan semua barang
-- Modal detail dengan form peminjaman
-- Quantity selector (+ dan -)
-
-### 2. Manajemen Barang (/manajemen)
-
-- Password protection
-- CRUD (Create, Read, Update, Delete) barang
-- Upload image via URL
-
-### 3. Riwayat (/riwayat)
-
-- Tabel riwayat semua peminjaman
-- Status: Sudah Kembali / Belum Kembali
-- Tombol "Tandai Kembali"
-
-## Database Schema
-
-### Item
-
-- id (String, Primary Key)
-- name (String)
-- description (String, nullable)
-- image (String, nullable)
-- stock (Int)
-- createdAt (DateTime)
-- updatedAt (DateTime)
-
-### Borrowing
-
-- id (String, Primary Key)
-- nim (String)
-- name (String)
-- phone (String)
-- itemId (String, Foreign Key)
-- quantity (Int)
-- borrowDate (DateTime)
-- returnDate (DateTime, nullable)
-- isReturned (Boolean)
-
-## Tech Stack
-
-- **Framework**: Next.js 14+ (App Router)
-- **Database ORM**: Prisma
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Language**: TypeScript
-
-## Troubleshooting
-
-### Error: Prisma Client not generated
-
-```bash
-npx prisma generate
-```
-
-### Error: Cannot connect to database
-
-Pastikan database sudah running dan `DATABASE_URL` di `.env` sudah benar.
-
-### Error: Module not found
-
-```bash
-npm install
-```
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push code ke GitHub
-2. Import project di Vercel
-3. Set environment variables
-4. Deploy
-
-### Manual
-
-```bash
+\`\`\`bash
 npm run build
 npm start
-```
+\`\`\`
 
-## Customization
+---
 
-### Ganti Warna
+## 📁 Struktur Project
 
-Edit `app/globals.css`:
+\`\`\`
+sistem-peminjaman-barang/
+├── app/ # Next.js App Router
+│ ├── page.tsx # Halaman Home
+│ ├── peminjaman/ # Halaman Peminjaman
+│ ├── manajemen/ # Halaman Manajemen Barang
+│ ├── riwayat/ # Halaman Riwayat Peminjaman
+│ ├── api/ # API Routes
+│ └── layout.tsx # Root Layout
+├── src/
+│ ├── actions/ # Server Actions (toolActions.ts)
+│ └── components/ # Reusable Components
+│ ├── Navbar.tsx # Navigation Bar
+│ ├── Toast.tsx # Notification System
+│ ├── SearchBar.tsx # Search Component
+│ └── ...
+├── components/ui/ # Shadcn/UI Components Library
+├── prisma/
+│ ├── schema.prisma # Database Schema
+│ └── dev.db # SQLite Database
+├── public/ # Static Assets
+├── lib/ # Utility Functions
+├── hooks/ # Custom React Hooks
+└── styles/ # Global Styles
 
-```css
-:root {
-  --primary-blue: #2563eb;
-  --primary-blue-dark: #1e40af;
-  --primary-blue-light: #3b82f6;
+\`\`\`
+
+---
+
+## 🔑 Credentials & Keamanan
+
+### Password Proteksi
+
+- **Username**: Admin
+- **Password**: `teknisidtee`
+
+> ⚠️ **Penting**: Ubah password default di production environment!
+
+### Session Management
+
+- Menggunakan `iron-session` untuk secure session storage
+- Session cookies tersimpan secara HTTP-only
+- Auto-logout setelah inactivity tertentu
+
+---
+
+## 📊 Database Schema
+
+### Model: Tool (Barang)
+
+\`\`\`prisma
+model Tool {
+id Int @id @default(autoincrement())
+name String // Nama barang
+category String // Kategori (Mikrokontroler, Kabel, dll)
+description String // Deskripsi barang
+quantity Int // Stok total
+borrowed Int // Jumlah yang sedang dipinjam
+imageUrl String? // URL gambar barang
+createdAt DateTime @default(now())
 }
-```
+\`\`\`
 
-### Ganti Logo/Title
+### Model: History (Riwayat Peminjaman)
 
-Edit `src/components/Navigation.tsx` dan `app/layout.tsx`
+\`\`\`prisma
+model History {
+id Int @id @default(autoincrement())
+toolId Int // Reference ke Tool
+toolName String // Nama barang (snapshot)
+qty Int // Jumlah yang dipinjam
+nim String // NIM Peminjam
+borrower String // Nama Peminjam
+phone String? // No. Telepon Peminjam
+isReturned Boolean // Status pengembalian
+returnedAt DateTime? // Tanggal pengembalian (auto-set)
+createdAt DateTime @default(now())
+}
+\`\`\`
+
+---
+
+## 🎨 Kategori Barang yang Tersedia
+
+- 🔌 **Mikrokontroler** - Arduino, STM32, Raspberry Pi
+- 🔗 **Kabel** - USB, HDMI, Jumper wires
+- 📍 **Resistor** - Berbagai ohm values
+- ⚡ **Kapasitor** - Electrolytic, Ceramic
+- 📡 **Sensor** - DHT, Ultrasonic, Flame
+- 🎛️ **Aktuator** - Motor, Servo, Relay
+- 📦 **Lain-lain** - Komponen lainnya
+
+---
+
+## 🎯 Panduan Penggunaan
+
+### Halaman Peminjaman
+
+1. Cari barang menggunakan search bar
+2. Klik tombol peminjaman pada barang
+3. Isi form peminjaman (NIM, Nama, No. Telp)
+4. Submit untuk mencatat peminjaman
+5. Toast notifikasi akan muncul saat berhasil
+
+### Halaman Manajemen (Proteksi Password)
+
+1. Klik "Manajemen" di navbar
+2. Masukkan password: `teknisidtee`
+3. Kelola barang: Tambah, Edit, Hapus
+4. Kategori dapat dipilih dari dropdown list
+
+### Halaman Riwayat (Proteksi Password)
+
+1. Klik "Riwayat" di navbar
+2. Masukkan password: `teknisidtee`
+3. Lihat semua history peminjaman
+4. Klik tombol "Edit" untuk modify data
+5. Klik tombol "Dikembalikan" untuk mark barang sebagai dikembalikan
+6. Tanggal pengembalian otomatis terisi dengan timestamp saat diklik
+
+---
+
+## 🐛 Troubleshooting
+
+### Database Error
+
+\`\`\`
+PrismaClientInitializationError
+\`\`\`
+**Solusi**: Jalankan `npx prisma migrate dev` untuk sync schema dengan database
+
+### Port 3000 Sudah Terpakai
+
+\`\`\`bash
+
+# Gunakan port berbeda
+
+npm run dev -- -p 3001
+\`\`\`
+
+### Password Tidak Bekerja
+
+- Pastikan password yang dimasukkan: `teknisidtee`
+- Clear browser cookies dan coba lagi
+- Restart development server
+
+---
+
+## 📝 Environment Variables Reference
+
+\`\`\`env
+
+# Wajib
+
+DATABASE_URL=file:./dev.db
+IRON_SESSION_PASSWORD=your-32-hex-string
+
+# Optional
+
+NODE_ENV=development
+\`\`\`
+
+---
+
+## 🔄 Development Workflow
+
+\`\`\`bash
+
+# Start dev server
+
+npm run dev
+
+# Build untuk production
+
+npm run build
+
+# Check TypeScript errors
+
+npx tsc --noEmit
+
+# Database management
+
+npx prisma studio # Visual database editor
+npx prisma migrate dev # Create & apply migration
+npx prisma db push # Push schema ke database
+\`\`\`
+
+---
+
+## 📦 Deployment
+
+### Deploy ke Vercel (Recommended)
+
+\`\`\`bash
+
+# Connect GitHub repository ke Vercel
+
+# Set environment variables di Vercel dashboard
+
+# Auto-deploy on push ke main branch
+
+\`\`\`
+
+### Deploy Lokal
+
+\`\`\`bash
+npm run build
+npm start
+\`\`\`
+
+---
+
+## 📄 Lisensi
+
+Proyek ini adalah internal project untuk [Institut/Organisasi].
+
+---
+
+## 👥 Kontribusi
+
+Untuk kontribusi atau report bugs, silakan buat issue di repository.
+
+---
+
+## 📞 Support
+
+Jika mengalami masalah atau pertanyaan:
+
+1. Baca dokumentasi di README ini
+2. Check troubleshooting section
+3. Hubungi admin sistem
+
+---
+
+**Last Updated**: Desember 2024  
+**Version**: 1.0.0
