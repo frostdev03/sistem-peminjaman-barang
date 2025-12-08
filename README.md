@@ -1,4 +1,4 @@
-# Sistem Peminjaman Barang
+# Pinjam Lab
 
 Aplikasi web untuk mengelola peminjaman alat dan bahan laboratorium secara mudah, cepat, dan efisien.
 
